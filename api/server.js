@@ -5,18 +5,19 @@ import userRoutes from "./routes/user.route.js"
 import dotenv from "dotenv"
 import connectToMongo from "./db/connectToDb.js";
 import cookieParser from "cookie-parser";
+import { app  ,server } from "./socket/socket.js"; 
 
 dotenv.config();
 
-const app = express();
+// const app = express();
 
 app.use(express.json())
 app.use(cookieParser())
-app.use("/auth",authRoutes)
-app.use("/messages",messageRoutes)
-app.use("/users",userRoutes)
+app.use("/api/auth",authRoutes)
+app.use("/api/messages",messageRoutes)
+app.use("/api/users",userRoutes)
 
-app.listen(3000,()=>{
+server.listen(5000,()=>{
     connectToMongo();
     console.log("backend is connected")
 });

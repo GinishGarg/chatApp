@@ -1,5 +1,6 @@
 import Conservation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
+import { getRecieverSocketId, io } from "../socket/socket.js";
 
 export const sendMessage = async (req, res) => {
   try {
@@ -23,14 +24,26 @@ export const sendMessage = async (req, res) => {
       receiverId,
       message,
     });
+    if (newMessage) {
+      conversation.messages.push(newMessage._id);
+    }
+  
 
-    conversation.messages.push(newMessage._id);
+
+
+
+
     await Promise.all([conversation.save(), newMessage.save()]);
 
-    res.status(201).json(newMessage);
+    const receiverSocketId = getRecieverSocketId(receiverId);
+    if(receiverSocketId){
+      io.to(receiverSocketId).emit("newMessage",newMessage)
+    }
+
+    return res.status(201).json(newMessage);
   } catch (error) {
     console.log("Error in sending message:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -44,14 +57,14 @@ export const getMessages = async (req, res) => {
     }).populate("messages");
 
     if (!conservation) {
-      res.status(200).json([]);
+      return res.status(200).json([]);
     }
 
     const messages = conservation.messages;
 
-    res.status(200).json(messages);
+    return res.status(200).json(messages);
   } catch (error) {
     console.log("Error in sending message:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
